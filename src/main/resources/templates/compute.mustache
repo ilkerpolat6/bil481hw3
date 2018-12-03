@@ -1,11 +1,14 @@
 <title>My application deployed automatically</title>
   <h1>Hello, World!</h1>
-    Result is {{result}}
-
+  
 
   <form action="compute" method="post">
-        <textarea name="input1" rows="10" cols="30"></textarea>
-        <textarea name="input2" rows="10" cols="30"></textarea>
+        
+        <p>First Name</p>
+        <textarea name="First Name" rows="10" cols="30"></textarea>
+        <p>Last Name</p>
+        <textarea name="Last Name" rows="10" cols="30"></textarea>
         <br>
         <input type="submit">
+        <p style="width:70pt"> {{result}} </p>
   </form>

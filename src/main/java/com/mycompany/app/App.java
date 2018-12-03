@@ -4,24 +4,87 @@ import static spark.Spark.get;
 import static spark.Spark.port;
 import static spark.Spark.post;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.mycompany.app.Person;
+import com.mycompany.app.MyHandler;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.xml.sax.SAXException;
 
 import spark.ModelAndView;
 import spark.template.mustache.MustacheTemplateEngine;
 
 public class App {
-    public static boolean search(ArrayList<Integer> array, int e) {
-        System.out.println("inside search");
-        if (array == null)
-            return false;
-
-        for (int elt : array) {
-            if (elt == e)
-                return true;
+    public static int stringDifference(String cs1, String cs2) {
+        if (cs1.equals(cs2)) {
+            return 0;
         }
-        return false;
+        if (cs1.isEmpty() || cs2.isEmpty()) {
+            return 999;
+        }
+        int i, diff = 0;
+        if (Math.abs(cs1.length() - cs2.length()) > 3)
+            return 999;
+        diff = Math.abs(cs1.length() - cs2.length());
+        for (i = 0; i < cs1.length() && i < cs2.length(); i++) {
+            if (cs1.charAt(i) != cs2.charAt(i)) {
+                diff++;
+            }
+        }
+        return diff;
+    }
+
+    public static String search(String fName, String lName) {
+        String results = "";
+        SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+
+        try {
+            SAXParser saxParser = saxParserFactory.newSAXParser();
+            MyHandler handler = new MyHandler();
+            saxParser.parse(new File("./EEAS.xml"), handler);
+            List<Person> empList = handler.getEmpList();
+            // print employee information
+            /*
+             * for (Person emp : empList){ results+=emp.toString(); }
+             */
+
+            if (lName.length() == 0) {
+                for (Person emp : empList) {
+                    // System.out.println(emp.getFirstname());
+                    System.out.println(stringDifference(emp.getFirstname(), fName));
+                    if (stringDifference(emp.getFirstname(), fName) < 3) {
+                        results += emp.toString();
+                    }
+                }
+            } else if (fName.length() == 0) {
+                for (Person emp : empList) {
+                    if (stringDifference(emp.getLastName(), lName) < 3) {
+                        results += emp.toString();
+                    }
+                }
+            } else if (fName.length() != 0 && lName.length() != 0) {
+                for (Person emp : empList) {
+                    if (stringDifference(emp.getLastName(), lName) < 3
+                            && stringDifference(emp.getFirstname(), fName) < 3) {
+                        results += emp.toString();
+                    }
+                }
+            }
+
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println(results);
+        return results;
     }
 
     public static void main(String[] args) {
@@ -33,21 +96,11 @@ public class App {
             // System.out.println(req.queryParams("input1"));
             // System.out.println(req.queryParams("input2"));
 
-            String input1 = req.queryParams("input1");
-            java.util.Scanner sc1 = new java.util.Scanner(input1);
-            sc1.useDelimiter("[;\r\n]+");
-            java.util.ArrayList<Integer> inputList = new java.util.ArrayList<>();
-            while (sc1.hasNext()) {
-                int value = Integer.parseInt(sc1.next().replaceAll("\\s", ""));
-                inputList.add(value);
-            }
-            System.out.println(inputList);
+            String input1 = req.queryParams("First Name").replaceAll(" ", "");
 
-            String input2 = req.queryParams("input2").replaceAll("\\s", "");
-            int input2AsInt = Integer.parseInt(input2);
+            String input2 = req.queryParams("Last Name").replaceAll(" ", "");
 
-            boolean result = App.search(inputList, input2AsInt);
-
+            String result = App.search(input1, input2);
             Map map = new HashMap();
             map.put("result", result);
             return new ModelAndView(map, "compute.mustache");
